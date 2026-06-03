@@ -18,6 +18,6 @@
  * (e.g. EXPO_PUBLIC_API_URL=https://my.host npx expo start).
  */
 export const API_BASE_URL: string =
-  process.env.EXPO_PUBLIC_API_URL ?? 'https://voluntari-app-woad.vercel.app';
+  process.env.EXPO_PUBLIC_API_URL  || 'http://localhost:3000';
 
 export const API_PREFIX = '/api/v1';
