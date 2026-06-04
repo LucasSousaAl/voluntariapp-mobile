@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   StyleSheet,
   TextInput,
@@ -8,7 +8,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Text } from './Text';
-import { colors, fonts, radius } from '@/theme';
+import { fonts, Palette, radius } from '@/theme';
+import { useTheme } from '@/theme/ThemeContext';
 
 interface Props extends TextInputProps {
   label?: string;
@@ -19,6 +20,8 @@ interface Props extends TextInputProps {
 }
 
 export const Input = ({ label, required, error, password, style, ...rest }: Props) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const [focused, setFocused] = useState(false);
   const [show, setShow] = useState(false);
 
@@ -66,38 +69,39 @@ export const Input = ({ label, required, error, password, style, ...rest }: Prop
   );
 };
 
-const styles = StyleSheet.create({
-  group: { gap: 6 },
-  label: {
-    fontFamily: fonts.sansBold,
-    color: colors.gray800,
-    fontSize: 13,
-  },
-  required: { color: colors.green600 },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: colors.gray200,
-    borderRadius: radius.sm,
-    backgroundColor: colors.cream,
-    paddingHorizontal: 14,
-  },
-  inputFocused: {
-    borderColor: colors.green500,
-    backgroundColor: colors.white,
-  },
-  inputError: { borderColor: colors.danger },
-  input: {
-    flex: 1,
-    paddingVertical: 12,
-    fontFamily: fonts.sans,
-    fontSize: 15,
-    color: colors.gray800,
-  },
-  errorText: {
-    color: colors.danger,
-    fontSize: 12,
-    fontFamily: fonts.sans,
-  },
-});
+const makeStyles = (colors: Palette) =>
+  StyleSheet.create({
+    group: { gap: 6 },
+    label: {
+      fontFamily: fonts.sansBold,
+      color: colors.gray800,
+      fontSize: 13,
+    },
+    required: { color: colors.green600 },
+    inputWrapper: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderWidth: 1.5,
+      borderColor: colors.gray200,
+      borderRadius: radius.sm,
+      backgroundColor: colors.cream,
+      paddingHorizontal: 14,
+    },
+    inputFocused: {
+      borderColor: colors.green500,
+      backgroundColor: colors.surface,
+    },
+    inputError: { borderColor: colors.danger },
+    input: {
+      flex: 1,
+      paddingVertical: 12,
+      fontFamily: fonts.sans,
+      fontSize: 15,
+      color: colors.gray800,
+    },
+    errorText: {
+      color: colors.danger,
+      fontSize: 12,
+      fontFamily: fonts.sans,
+    },
+  });

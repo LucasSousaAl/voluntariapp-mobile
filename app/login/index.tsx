@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Image,
   KeyboardAvoidingView,
@@ -16,17 +16,24 @@ import { Button } from '@/components/Button';
 import { useApp } from '@/context/AppContext';
 import { useToast } from '@/components/Toast';
 import { api } from '@/lib/api';
+import { useMutation } from '@/hooks/useMutation';
 import { SessionUser } from '@/types';
-import { colors, fonts, radius, shadows } from '@/theme';
+import { fonts, Palette, radius, shadows } from '@/theme';
+import { useTheme } from '@/theme/ThemeContext';
 
 export default function LoginScreen() {
   const router = useRouter();
   const toast = useToast();
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { userType, setUserType, signIn } = useApp();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+
+  const login = useMutation((body: { email: string; password: string }) =>
+    api.post<{ token: string; user: SessionUser }>('/auth/login', body),
+  );
 
   const validate = () => {
     const next: typeof errors = {};
@@ -39,12 +46,8 @@ export default function LoginScreen() {
 
   const handleSubmit = async () => {
     if (!validate()) return;
-    setLoading(true);
     try {
-      const data = await api.post<{ token: string; user: SessionUser }>(
-        '/auth/login',
-        { email, password },
-      );
+      const data = await login.mutate({ email, password });
       await signIn({ token: data.token, user: data.user });
       toast.success('Login bem-sucedido!');
       if (data.user.role === 'ong' || data.user.role === 'admin') {
@@ -54,8 +57,6 @@ export default function LoginScreen() {
       }
     } catch (err: any) {
       toast.error(err?.message || 'Falha no login');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -122,7 +123,7 @@ export default function LoginScreen() {
                 autoCapitalize="none"
                 error={errors.password}
               />
-              <Button size="lg" block onPress={handleSubmit} loading={loading}>
+              <Button size="lg" block onPress={handleSubmit} loading={login.loading}>
                 Entrar →
               </Button>
             </View>
@@ -140,60 +141,61 @@ export default function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  wrapper: {
-    flex: 1,
-    backgroundColor: colors.green900,
-  },
-  scroll: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    padding: 20,
-  },
-  card: {
-    backgroundColor: colors.white,
-    borderRadius: radius.md,
-    padding: 24,
-    paddingTop: 32,
-    maxWidth: 440,
-    width: '100%',
-    alignSelf: 'center',
-    ...shadows.lg,
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: 24,
-    gap: 12,
-  },
-  logo: { width: 56, height: 56 },
-  title: {
-    fontFamily: fonts.serif,
-    fontSize: 28,
-    color: colors.gray800,
-    textAlign: 'center',
-  },
-  toggleRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 4,
-  },
-  subtitle: {
-    fontFamily: fonts.sans,
-    color: colors.gray600,
-    fontSize: 15,
-    textAlign: 'center',
-  },
-  form: {
-    gap: 14,
-  },
-  footer: {
-    marginTop: 20,
-    flexDirection: 'row',
-    justifyContent: 'center',
-  },
-  link: {
-    color: colors.green700,
-    fontFamily: fonts.sansBold,
-    fontSize: 13,
-  },
-});
+const makeStyles = (colors: Palette) =>
+  StyleSheet.create({
+    wrapper: {
+      flex: 1,
+      backgroundColor: colors.green900,
+    },
+    scroll: {
+      flexGrow: 1,
+      justifyContent: 'center',
+      padding: 20,
+    },
+    card: {
+      backgroundColor: colors.surface,
+      borderRadius: radius.md,
+      padding: 24,
+      paddingTop: 32,
+      maxWidth: 440,
+      width: '100%',
+      alignSelf: 'center',
+      ...shadows.lg,
+    },
+    header: {
+      alignItems: 'center',
+      marginBottom: 24,
+      gap: 12,
+    },
+    logo: { width: 56, height: 56 },
+    title: {
+      fontFamily: fonts.serif,
+      fontSize: 28,
+      color: colors.gray800,
+      textAlign: 'center',
+    },
+    toggleRow: {
+      flexDirection: 'row',
+      gap: 8,
+      marginTop: 4,
+    },
+    subtitle: {
+      fontFamily: fonts.sans,
+      color: colors.gray600,
+      fontSize: 15,
+      textAlign: 'center',
+    },
+    form: {
+      gap: 14,
+    },
+    footer: {
+      marginTop: 20,
+      flexDirection: 'row',
+      justifyContent: 'center',
+    },
+    link: {
+      color: colors.green500,
+      fontFamily: fonts.sansBold,
+      fontSize: 13,
+    },
+  });

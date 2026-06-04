@@ -1,10 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import {
-  ScrollView,
-  Share,
-  StyleSheet,
-  View,
-} from 'react-native';
+import React, { useMemo } from 'react';
+import { ScrollView, Share, StyleSheet, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Navbar } from '@/components/Navbar';
@@ -16,55 +11,48 @@ import { CategoryTag, ModalityTag } from '@/components/Tag';
 import { Spinner } from '@/components/Spinner';
 import { useApp } from '@/context/AppContext';
 import { useToast } from '@/components/Toast';
-import { api } from '@/lib/api';
+import { api, API_BASE_URL } from '@/lib/api';
+import { useFetch } from '@/hooks/useFetch';
+import { useMutation } from '@/hooks/useMutation';
+import { notify } from '@/lib/notifications';
 import { mapTrabalhoToVaga } from '@/lib/mappers';
-import { API_BASE_URL } from '@/lib/api';
 import { Vaga } from '@/types';
-import { colors, fonts, radius, shadows } from '@/theme';
+import { fonts, Palette, radius, shadows } from '@/theme';
+import { useTheme } from '@/theme/ThemeContext';
 
 export default function VagaScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const toast = useToast();
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { selectedVaga } = useApp();
-  const [vaga, setVaga] = useState<Vaga | null>(selectedVaga);
-  const [loading, setLoading] = useState(!selectedVaga);
-  const [applying, setApplying] = useState(false);
 
-  useEffect(() => {
-    if (selectedVaga && selectedVaga.id === id) return;
-    if (!id) return;
-    let mounted = true;
-    (async () => {
-      try {
-        const data = await api.get<any[]>('/trabalho', { query: { id } });
-        if (mounted && Array.isArray(data) && data.length > 0) {
-          setVaga(mapTrabalhoToVaga(data[0]));
-        }
-      } catch {
-        toast.error('Falha ao carregar vaga');
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, [id, selectedVaga, toast]);
+  const needFetch = !!id && (!selectedVaga || selectedVaga.id !== id);
+
+  // Custom data hook — only fetches when we don't already hold the vaga.
+  const { data: vaga, loading } = useFetch<Vaga | null>('/trabalho', {
+    query: { id },
+    enabled: needFetch,
+    initialData: selectedVaga,
+    select: (raw) =>
+      Array.isArray(raw) && raw.length > 0 ? mapTrabalhoToVaga(raw[0]) : null,
+  });
+
+  // Custom mutation hook for the apply action.
+  const apply = useMutation((trabalhoId: number) =>
+    api.post('/trabalho/apply', { trabalho_id: trabalhoId }),
+  );
 
   const handleApply = async () => {
     if (!vaga) return;
-    setApplying(true);
     try {
-      await api.post('/trabalho/apply', {
-        trabalho_id: parseInt(vaga.id, 10),
-      });
+      await apply.mutate(parseInt(vaga.id, 10));
       toast.success('Inscrição realizada com sucesso!');
+      notify('Inscrição confirmada 🎉', `Você se candidatou para "${vaga.title}".`);
       router.replace('/profile');
     } catch (err: any) {
       toast.error(err?.message || 'Erro ao realizar inscrição.');
-    } finally {
-      setApplying(false);
     }
   };
 
@@ -130,10 +118,10 @@ export default function VagaScreen() {
         </View>
 
         <View style={styles.infoGrid}>
-          <InfoBox label="Vagas Abertas" value={`${remaining} restantes`} />
-          <InfoBox label="Carga Horária" value={`${vaga.hoursPerWeek}h / semana`} />
-          <InfoBox label="Período" value={String(vaga.availability)} />
-          <InfoBox label="Início" value={vaga.startDate} />
+          <InfoBox label="Vagas Abertas" value={`${remaining} restantes`} colors={colors} />
+          <InfoBox label="Carga Horária" value={`${vaga.hoursPerWeek}h / semana`} colors={colors} />
+          <InfoBox label="Período" value={String(vaga.availability)} colors={colors} />
+          <InfoBox label="Início" value={vaga.startDate} colors={colors} />
         </View>
 
         <View style={{ marginBottom: 24 }}>
@@ -168,7 +156,7 @@ export default function VagaScreen() {
           <Text variant="small" color={colors.gray400} style={{ marginBottom: 18 }}>
             {remaining} vagas disponíveis · Resposta em até 48h
           </Text>
-          <Button block size="lg" loading={applying} onPress={handleApply}>
+          <Button block size="lg" loading={apply.loading} onPress={handleApply}>
             Quero me voluntariar →
           </Button>
           <View style={{ height: 10 }} />
@@ -210,8 +198,16 @@ export default function VagaScreen() {
   );
 }
 
-const InfoBox = ({ label, value }: { label: string; value: string }) => (
-  <View style={styles.infoBox}>
+const InfoBox = ({
+  label,
+  value,
+  colors,
+}: {
+  label: string;
+  value: string;
+  colors: Palette;
+}) => (
+  <View style={[infoStyles.infoBox, { backgroundColor: colors.surface }, shadows.sm]}>
     <Text variant="label">{label}</Text>
     <Text
       style={{
@@ -227,71 +223,73 @@ const InfoBox = ({ label, value }: { label: string; value: string }) => (
   </View>
 );
 
-const styles = StyleSheet.create({
-  scroll: { padding: 16, paddingBottom: 32 },
-  back: { alignSelf: 'flex-start', paddingHorizontal: 0, marginBottom: 8 },
-  hero: {
-    backgroundColor: colors.green800,
-    borderRadius: radius.md,
-    padding: 24,
-    marginBottom: 20,
-  },
-  heroOngRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 12,
-  },
-  heroIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  heroOng: {
-    color: colors.white,
-    fontSize: 15,
-    fontFamily: fonts.sansBold,
-  },
-  heroVerified: {
-    color: colors.green300,
-    fontSize: 12,
-    fontFamily: fonts.sans,
-  },
-  heroTitle: {
-    fontFamily: fonts.serif,
-    fontSize: 28,
-    color: colors.white,
-    lineHeight: 34,
-    marginBottom: 12,
-  },
-  tagRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  infoGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-    marginBottom: 24,
-  },
+const infoStyles = StyleSheet.create({
   infoBox: {
     width: '47%',
     flexGrow: 1,
-    backgroundColor: colors.white,
     borderRadius: 8,
     padding: 14,
-    ...shadows.sm,
-  },
-  reqRow: {
-    flexDirection: 'row',
-    gap: 10,
-    paddingVertical: 4,
-  },
-  ctaCard: {
-    ...shadows.md,
   },
 });
+
+const makeStyles = (colors: Palette) =>
+  StyleSheet.create({
+    scroll: { padding: 16, paddingBottom: 32 },
+    back: { alignSelf: 'flex-start', paddingHorizontal: 0, marginBottom: 8 },
+    hero: {
+      backgroundColor: colors.green800,
+      borderRadius: radius.md,
+      padding: 24,
+      marginBottom: 20,
+    },
+    heroOngRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      marginBottom: 12,
+    },
+    heroIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: 10,
+      backgroundColor: 'rgba(255,255,255,0.15)',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    heroOng: {
+      color: '#ffffff',
+      fontSize: 15,
+      fontFamily: fonts.sansBold,
+    },
+    heroVerified: {
+      color: colors.green300,
+      fontSize: 12,
+      fontFamily: fonts.sans,
+    },
+    heroTitle: {
+      fontFamily: fonts.serif,
+      fontSize: 28,
+      color: '#ffffff',
+      lineHeight: 34,
+      marginBottom: 12,
+    },
+    tagRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+    },
+    infoGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 12,
+      marginBottom: 24,
+    },
+    reqRow: {
+      flexDirection: 'row',
+      gap: 10,
+      paddingVertical: 4,
+    },
+    ctaCard: {
+      ...shadows.md,
+    },
+  });

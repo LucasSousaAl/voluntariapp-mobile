@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -7,7 +7,8 @@ import {
   ViewStyle,
 } from 'react-native';
 import { Text } from './Text';
-import { colors, fonts, radius } from '@/theme';
+import { fonts, Palette, radius } from '@/theme';
+import { useTheme } from '@/theme/ThemeContext';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'dark';
 export type ButtonSize = 'sm' | 'md' | 'lg';
@@ -35,6 +36,8 @@ export const Button = ({
   style,
   textStyle,
 }: Props) => {
+  const { colors } = useTheme();
+  const variantStylesMap = useMemo(() => makeVariants(colors), [colors]);
   const sizeStyle = sizeStyles[size];
   const variantStyles = variantStylesMap[variant];
 
@@ -91,13 +94,12 @@ const sizeStyles = {
   },
 };
 
-const variantStylesMap: Record<
-  ButtonVariant,
-  { container: ViewStyle; text: TextStyle }
-> = {
+const makeVariants = (
+  colors: Palette,
+): Record<ButtonVariant, { container: ViewStyle; text: TextStyle }> => ({
   primary: {
     container: { backgroundColor: colors.green700 },
-    text: { color: colors.white },
+    text: { color: '#ffffff' },
   },
   secondary: {
     container: { backgroundColor: colors.gray200 },
@@ -109,11 +111,11 @@ const variantStylesMap: Record<
       borderWidth: 1.5,
       borderColor: colors.green300,
     },
-    text: { color: colors.green700 },
+    text: { color: colors.green500 },
   },
   ghost: {
     container: { backgroundColor: 'transparent' },
-    text: { color: colors.green700 },
+    text: { color: colors.green500 },
   },
   dark: {
     container: {
@@ -121,6 +123,6 @@ const variantStylesMap: Record<
       borderWidth: 1,
       borderColor: 'rgba(255,255,255,0.2)',
     },
-    text: { color: colors.white },
+    text: { color: '#ffffff' },
   },
-};
+});

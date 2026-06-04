@@ -1,7 +1,8 @@
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Text } from './Text';
-import { colors, fonts } from '@/theme';
+import { fonts } from '@/theme';
+import { useTheme } from '@/theme/ThemeContext';
 
 interface Props {
   title: string;
@@ -9,16 +10,19 @@ interface Props {
   onAction?: () => void;
 }
 
-export const SectionHeader = ({ title, action, onAction }: Props) => (
-  <View style={styles.row}>
-    <Text variant="label">{title}</Text>
-    {action ? (
-      <Pressable onPress={onAction}>
-        <Text style={styles.action}>{action} →</Text>
-      </Pressable>
-    ) : null}
-  </View>
-);
+export const SectionHeader = ({ title, action, onAction }: Props) => {
+  const { colors } = useTheme();
+  return (
+    <View style={styles.row}>
+      <Text variant="label">{title}</Text>
+      {action ? (
+        <Pressable onPress={onAction}>
+          <Text style={[styles.action, { color: colors.green500 }]}>{action} →</Text>
+        </Pressable>
+      ) : null}
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
   row: {
@@ -28,7 +32,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   action: {
-    color: colors.green600,
     fontSize: 13,
     fontFamily: fonts.sansMedium,
   },

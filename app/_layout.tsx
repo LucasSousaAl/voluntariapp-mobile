@@ -17,12 +17,14 @@ import { useFonts } from 'expo-font';
 import { AppProvider, useApp } from '@/context/AppContext';
 import { ToastProvider } from '@/components/Toast';
 import { OfflineBanner } from '@/components/OfflineBanner';
-import { colors } from '@/theme';
+import { ThemeProvider, useTheme } from '@/theme/ThemeContext';
+import { requestNotificationPermission } from '@/lib/notifications';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 function ProtectedNavigator() {
   const { currentUserRole, isBootstrapping } = useApp();
+  const { colors } = useTheme();
   const segments = useSegments();
   const router = useRouter();
 
@@ -60,6 +62,24 @@ function ProtectedNavigator() {
   );
 }
 
+function Shell() {
+  const { isDark } = useTheme();
+
+  // Ask for notification permission once on launch (recurso nativo #2).
+  // Denial is non-blocking — notifications simply won't fire.
+  useEffect(() => {
+    requestNotificationPermission();
+  }, []);
+
+  return (
+    <ToastProvider>
+      <StatusBar style="light" />
+      <ProtectedNavigator />
+      <OfflineBanner />
+    </ToastProvider>
+  );
+}
+
 export default function RootLayout() {
   const [loraLoaded] = useLora({ Lora_400Regular, Lora_700Bold });
   const [dmLoaded] = useFonts({
@@ -77,13 +97,11 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <AppProvider>
-        <ToastProvider>
-          <StatusBar style="light" />
-          <ProtectedNavigator />
-          <OfflineBanner />
-        </ToastProvider>
-      </AppProvider>
+      <ThemeProvider>
+        <AppProvider>
+          <Shell />
+        </AppProvider>
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }

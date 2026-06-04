@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Navbar } from '@/components/Navbar';
@@ -10,13 +10,15 @@ import { Chip } from '@/components/Chip';
 import { useApp } from '@/context/AppContext';
 import { useToast } from '@/components/Toast';
 import { api } from '@/lib/api';
+import { notify } from '@/lib/notifications';
 import {
   Availability,
   Category,
   Modality,
   NewVagaForm,
 } from '@/types';
-import { colors, fonts, radius } from '@/theme';
+import { fonts, Palette, radius } from '@/theme';
+import { useTheme } from '@/theme/ThemeContext';
 
 const stepLabels = ['Dados básicos', 'Detalhes', 'Revisão'];
 
@@ -46,6 +48,8 @@ const initialForm: NewVagaForm = {
 export default function FormScreen() {
   const router = useRouter();
   const toast = useToast();
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { currentUser } = useApp();
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<NewVagaForm>(initialForm);
@@ -78,6 +82,7 @@ export default function FormScreen() {
         carga_horaria: parseInt(form.hoursPerWeek, 10) || 0,
       });
       toast.success('Vaga criada com sucesso!');
+      notify('Vaga publicada ✓', `"${form.title}" já está visível para voluntários.`);
       router.replace('/ong');
     } catch (err: any) {
       toast.error(err?.message || 'Erro ao salvar vaga');
@@ -269,7 +274,8 @@ export default function FormScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) =>
+  StyleSheet.create({
   scroll: { padding: 16, paddingBottom: 60 },
   stepsRow: {
     flexDirection: 'row',

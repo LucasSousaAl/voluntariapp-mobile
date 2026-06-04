@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Navbar } from '@/components/Navbar';
@@ -19,7 +19,8 @@ import { useToast } from '@/components/Toast';
 import { api } from '@/lib/api';
 import { mapTrabalhoToVaga } from '@/lib/mappers';
 import { Category, Vaga, VagaStatus } from '@/types';
-import { colors, fonts, iconForCategory, radius } from '@/theme';
+import { fonts, iconForCategory, Palette, radius } from '@/theme';
+import { useTheme } from '@/theme/ThemeContext';
 
 const categories: Category[] = ['Educação', 'Saúde', 'Meio Ambiente', 'Social'];
 
@@ -34,6 +35,8 @@ interface OngData {
 export default function OngScreen() {
   const router = useRouter();
   const toast = useToast();
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { currentUser, currentUserRole, setCurrentUserRole, setSelectedVaga } =
     useApp();
   const [loading, setLoading] = useState(true);
@@ -428,7 +431,8 @@ export default function OngScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: Palette) =>
+  StyleSheet.create({
   scroll: { padding: 16, paddingBottom: 60 },
   header: {
     backgroundColor: colors.green800,

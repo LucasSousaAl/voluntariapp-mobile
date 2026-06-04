@@ -7,7 +7,8 @@ import { Card } from './Card';
 import { IconBox } from './IconBox';
 import { Button } from './Button';
 import { AvailabilityTag, CategoryTag, ModalityTag } from './Tag';
-import { colors } from '@/theme';
+import { colors as staticColors } from '@/theme';
+import { useTheme } from '@/theme/ThemeContext';
 import { useApp } from '@/context/AppContext';
 
 interface Props {
@@ -15,16 +16,17 @@ interface Props {
 }
 
 const iconBgMap: Record<string, string> = {
-  '🌱': colors.tagEduBg,
-  '🤝': colors.tagSocBg,
-  '🌳': colors.tagEnvBg,
-  '📚': colors.tagEduBg,
-  '💚': colors.tagHltBg,
+  '🌱': staticColors.tagEduBg,
+  '🤝': staticColors.tagSocBg,
+  '🌳': staticColors.tagEnvBg,
+  '📚': staticColors.tagEduBg,
+  '💚': staticColors.tagHltBg,
   '🎨': '#fce8f8',
 };
 
 export const VagaCard = ({ vaga }: Props) => {
   const router = useRouter();
+  const { colors } = useTheme();
   const { setSelectedVaga } = useApp();
 
   const handleView = () => {
@@ -35,7 +37,7 @@ export const VagaCard = ({ vaga }: Props) => {
   return (
     <Card onPress={handleView} style={styles.card}>
       <View style={styles.header}>
-        <IconBox emoji={vaga.icon} bg={iconBgMap[vaga.icon] || colors.tagEduBg} size={44} />
+        <IconBox emoji={vaga.icon} bg={iconBgMap[vaga.icon] || staticColors.tagEduBg} size={44} />
         <View style={{ flex: 1 }}>
           <Text variant="small" color={colors.gray400}>
             {vaga.ong} · {vaga.city}

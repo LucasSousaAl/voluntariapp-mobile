@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Image,
   KeyboardAvoidingView,
@@ -18,11 +18,14 @@ import { useToast } from '@/components/Toast';
 import { api } from '@/lib/api';
 import { geocodeAddress } from '@/lib/geocode';
 import { SessionUser } from '@/types';
-import { colors, fonts, radius, shadows } from '@/theme';
+import { fonts, Palette, radius, shadows } from '@/theme';
+import { useTheme } from '@/theme/ThemeContext';
 
 export default function RegisterScreen() {
   const router = useRouter();
   const toast = useToast();
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { userType, setUserType, signIn, setCurrentUserRole } = useApp();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
@@ -217,58 +220,59 @@ export default function RegisterScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  wrapper: {
-    flex: 1,
-    backgroundColor: colors.green900,
-  },
-  scroll: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    padding: 20,
-  },
-  card: {
-    backgroundColor: colors.white,
-    borderRadius: radius.md,
-    padding: 24,
-    paddingTop: 32,
-    maxWidth: 440,
-    width: '100%',
-    alignSelf: 'center',
-    ...shadows.lg,
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: 24,
-    gap: 12,
-  },
-  logo: { width: 56, height: 56 },
-  title: {
-    fontFamily: fonts.serif,
-    fontSize: 28,
-    color: colors.gray800,
-    textAlign: 'center',
-  },
-  toggleRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 4,
-  },
-  subtitle: {
-    fontFamily: fonts.sans,
-    color: colors.gray600,
-    fontSize: 15,
-    textAlign: 'center',
-  },
-  form: { gap: 14 },
-  footer: {
-    marginTop: 20,
-    flexDirection: 'row',
-    justifyContent: 'center',
-  },
-  link: {
-    color: colors.green700,
-    fontFamily: fonts.sansBold,
-    fontSize: 13,
-  },
-});
+const makeStyles = (colors: Palette) =>
+  StyleSheet.create({
+    wrapper: {
+      flex: 1,
+      backgroundColor: colors.green900,
+    },
+    scroll: {
+      flexGrow: 1,
+      justifyContent: 'center',
+      padding: 20,
+    },
+    card: {
+      backgroundColor: colors.surface,
+      borderRadius: radius.md,
+      padding: 24,
+      paddingTop: 32,
+      maxWidth: 440,
+      width: '100%',
+      alignSelf: 'center',
+      ...shadows.lg,
+    },
+    header: {
+      alignItems: 'center',
+      marginBottom: 24,
+      gap: 12,
+    },
+    logo: { width: 56, height: 56 },
+    title: {
+      fontFamily: fonts.serif,
+      fontSize: 28,
+      color: colors.gray800,
+      textAlign: 'center',
+    },
+    toggleRow: {
+      flexDirection: 'row',
+      gap: 8,
+      marginTop: 4,
+    },
+    subtitle: {
+      fontFamily: fonts.sans,
+      color: colors.gray600,
+      fontSize: 15,
+      textAlign: 'center',
+    },
+    form: { gap: 14 },
+    footer: {
+      marginTop: 20,
+      flexDirection: 'row',
+      justifyContent: 'center',
+    },
+    link: {
+      color: colors.green500,
+      fontFamily: fonts.sansBold,
+      fontSize: 13,
+    },
+  });

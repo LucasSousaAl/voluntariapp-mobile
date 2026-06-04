@@ -8,7 +8,14 @@ import { Avatar } from './Avatar';
 import { useApp } from '@/context/AppContext';
 import { useToast } from './Toast';
 import { colors, fonts, shadows } from '@/theme';
+import { useTheme } from '@/theme/ThemeContext';
 import { initialsFromName } from '@/lib/mappers';
+
+const themeLabel: Record<string, string> = {
+  light: '☀️  Tema: Claro',
+  dark: '🌙  Tema: Escuro',
+  system: '🌗  Tema: Sistema',
+};
 
 interface NavItem {
   href: string;
@@ -26,6 +33,7 @@ export const Navbar = () => {
   const router = useRouter();
   const pathname = usePathname();
   const { currentUserRole, currentUser, signOut } = useApp();
+  const { mode, toggle } = useTheme();
   const toast = useToast();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -109,6 +117,10 @@ export const Navbar = () => {
                   </Pressable>
                 );
               })}
+
+              <Pressable onPress={toggle} style={styles.drawerLink}>
+                <Text style={styles.drawerLinkText}>{themeLabel[mode]}</Text>
+              </Pressable>
 
               {currentUserRole !== 'guest' && (
                 <Pressable

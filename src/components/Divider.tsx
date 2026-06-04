@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, ViewStyle } from 'react-native';
-import { colors } from '@/theme';
+import { useTheme } from '@/theme/ThemeContext';
 
-export const Divider = ({ color = colors.gray200, style }: { color?: string; style?: ViewStyle }) => (
-  <View style={[{ height: 1, backgroundColor: color }, style]} />
-);
+export const Divider = ({ color, style }: { color?: string; style?: ViewStyle }) => {
+  const { colors } = useTheme();
+  return <View style={[{ height: 1, backgroundColor: color ?? colors.gray200 }, style]} />;
+};

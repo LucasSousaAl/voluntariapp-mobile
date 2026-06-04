@@ -1,6 +1,7 @@
-import React from 'react';
-import { Text as RNText, TextProps, StyleSheet } from 'react-native';
-import { colors, fonts } from '@/theme';
+import React, { useMemo } from 'react';
+import { Text as RNText, TextProps } from 'react-native';
+import { fonts, Palette } from '@/theme';
+import { useTheme } from '@/theme/ThemeContext';
 
 interface Props extends TextProps {
   variant?:
@@ -15,7 +16,7 @@ interface Props extends TextProps {
   color?: string;
 }
 
-const variants: Record<NonNullable<Props['variant']>, any> = {
+const makeVariants = (colors: Palette): Record<NonNullable<Props['variant']>, any> => ({
   body: { fontFamily: fonts.sans, fontSize: 15, color: colors.gray800, lineHeight: 22 },
   bodyBold: { fontFamily: fonts.sansBold, fontSize: 15, color: colors.gray800 },
   serif: { fontFamily: fonts.serif, fontSize: 18, color: colors.gray800 },
@@ -30,14 +31,13 @@ const variants: Record<NonNullable<Props['variant']>, any> = {
   },
   muted: { fontFamily: fonts.sans, fontSize: 14, color: colors.gray400 },
   small: { fontFamily: fonts.sans, fontSize: 12, color: colors.gray600 },
-};
+});
 
 export const Text = ({ variant = 'body', color, style, children, ...rest }: Props) => {
+  const { colors } = useTheme();
+  const variants = useMemo(() => makeVariants(colors), [colors]);
   return (
-    <RNText
-      {...rest}
-      style={StyleSheet.flatten([variants[variant], color ? { color } : null, style])}
-    >
+    <RNText {...rest} style={[variants[variant], color ? { color } : null, style]}>
       {children}
     </RNText>
   );

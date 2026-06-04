@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Text } from './Text';
-import { colors } from '@/theme';
+import { Palette } from '@/theme';
+import { useTheme } from '@/theme/ThemeContext';
 
 interface Props {
   value: number;
@@ -10,6 +11,8 @@ interface Props {
 }
 
 export const ProgressBar = ({ value, max, showLabel = true }: Props) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const pct = max > 0 ? Math.min(100, (value / max) * 100) : 0;
   return (
     <View style={styles.row}>
@@ -25,23 +28,24 @@ export const ProgressBar = ({ value, max, showLabel = true }: Props) => {
   );
 };
 
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    minWidth: 160,
-  },
-  track: {
-    flex: 1,
-    height: 6,
-    backgroundColor: colors.gray200,
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  fill: {
-    height: '100%',
-    backgroundColor: colors.green500,
-    borderRadius: 3,
-  },
-});
+const makeStyles = (colors: Palette) =>
+  StyleSheet.create({
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      minWidth: 160,
+    },
+    track: {
+      flex: 1,
+      height: 6,
+      backgroundColor: colors.gray200,
+      borderRadius: 3,
+      overflow: 'hidden',
+    },
+    fill: {
+      height: '100%',
+      backgroundColor: colors.green500,
+      borderRadius: 3,
+    },
+  });

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { Navbar } from '@/components/Navbar';
 import { Text } from '@/components/Text';
@@ -16,7 +16,8 @@ import { useApp } from '@/context/AppContext';
 import { useToast } from '@/components/Toast';
 import { api } from '@/lib/api';
 import { initialsFromName } from '@/lib/mappers';
-import { categoryStyle, colors, fonts } from '@/theme';
+import { categoryStyle, fonts, Palette } from '@/theme';
+import { useTheme } from '@/theme/ThemeContext';
 import { Category, HistoricoItem } from '@/types';
 
 interface Voluntario {
@@ -37,6 +38,8 @@ const modalities = ['Remoto', 'Presencial', 'Híbrido'] as const;
 
 export default function ProfileScreen() {
   const { currentUserRole, refreshSession } = useApp();
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const toast = useToast();
   const [loading, setLoading] = useState(true);
   const [voluntario, setVoluntario] = useState<Voluntario | null>(null);
@@ -288,9 +291,9 @@ export default function ProfileScreen() {
         <Card style={{ marginTop: 12, marginBottom: 32 }}>
           <Text variant="label" style={{ marginBottom: 16 }}>Resumo</Text>
           <View style={styles.summaryGrid}>
-            <SummaryStat num={voluntario.historico.length} label="Atividades" />
-            <SummaryStat num={`${voluntario.totalHours}h`} label="Horas totais" />
-            <SummaryStat num={uniqueOngs} label="ONGs" />
+            <SummaryStat num={voluntario.historico.length} label="Atividades" colors={colors} />
+            <SummaryStat num={`${voluntario.totalHours}h`} label="Horas totais" colors={colors} />
+            <SummaryStat num={uniqueOngs} label="ONGs" colors={colors} />
           </View>
         </Card>
       </ScrollView>
@@ -363,8 +366,16 @@ export default function ProfileScreen() {
   );
 }
 
-const SummaryStat = ({ num, label }: { num: number | string; label: string }) => (
-  <View style={styles.summaryStat}>
+const SummaryStat = ({
+  num,
+  label,
+  colors,
+}: {
+  num: number | string;
+  label: string;
+  colors: Palette;
+}) => (
+  <View style={[summaryStatStyle.box, { backgroundColor: colors.green50 }]}>
     <Text style={{ fontSize: 28, color: colors.green700, fontFamily: fonts.sansBold }}>
       {num}
     </Text>
@@ -374,7 +385,17 @@ const SummaryStat = ({ num, label }: { num: number | string; label: string }) =>
   </View>
 );
 
-const styles = StyleSheet.create({
+const summaryStatStyle = StyleSheet.create({
+  box: {
+    flex: 1,
+    borderRadius: 8,
+    padding: 14,
+    alignItems: 'center',
+  },
+});
+
+const makeStyles = (colors: Palette) =>
+  StyleSheet.create({
   scroll: { padding: 16, paddingBottom: 60 },
   profileCard: {
     backgroundColor: colors.green900,
